@@ -13,21 +13,17 @@ import (
 
 func main() {
 	var fullPath string
-	path := os.Getenv("XDG_CONFIG_HOME")
-	if path != "" {
-		fullPath = filepath.Join(path, "jobtrack")
-		os.Mkdir(fullPath, 0755)
-	} else {
-		path = os.Getenv("HOME")
-		if path != "" {
-			fullPath = filepath.Join(path, ".jobtrack")
-			os.Mkdir(fullPath, 0755)
-		} else {
-			fmt.Println("Can't find $XDG_CONFIG_HOME or $HOME")
-			fmt.Println("Exiting...")
-			os.Exit(1)
-		}
+	path, err := os.UserConfigDir()
+	if err != nil {
+		fmt.Printf("error: %v\n", err)
+		os.Exit(1)
 	}
+	fullPath = filepath.Join(path, "jobtrack")
+	if err := os.MkdirAll(fullPath, 0755); err != nil {
+		fmt.Printf("error: %v\n", err)
+		os.Exit(1)
+	}
+
 	fullPath = filepath.Join(fullPath, "jobs.db")
 
 	s, err := store.New(fullPath)

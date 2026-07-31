@@ -1,4 +1,3 @@
-// Package models defines the data types for JobTrack.
 package models
 
 // Status values form a fixed workflow:
@@ -16,8 +15,6 @@ const (
 	StatusWithdrawn   = "withdrawn"
 )
 
-// AllStatuses is the ordered list of statuses, used by the form's
-// status spinner and to color rows in the list view.
 var AllStatuses = []string{
 	StatusApplied,
 	StatusPhoneScreen,
