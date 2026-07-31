@@ -84,13 +84,13 @@ func (m FormModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "right", "space":
 			if m.focus == fieldStatus {
 				m.statusIdx = (m.statusIdx + 1) % len(models.AllStatuses)
+				return m, nil
 			}
-			return m, nil
 		case "left":
 			if m.focus == fieldStatus {
 				m.statusIdx = (m.statusIdx + len(models.AllStatuses) - 1) % len(models.AllStatuses)
+				return m, nil
 			}
-			return m, nil
 		}
 	}
 
