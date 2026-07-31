@@ -36,9 +36,6 @@ type submitDeleteApplicationMsg struct {
 	app models.Application
 }
 
-// cancelFormMsg: the form view, user pressed esc.
-type cancelFormMsg struct{}
-
 func showListCmd() tea.Cmd {
 	return func() tea.Msg { return showListMsg{} }
 }
@@ -65,10 +62,6 @@ func deleteAppCmd(app models.Application) tea.Cmd {
 
 func submitDeleteApplicationCmd(app models.Application) tea.Cmd {
 	return func() tea.Msg { return submitDeleteApplicationMsg{app: app} }
-}
-
-func cancelCmd() tea.Cmd {
-	return func() tea.Msg { return cancelFormMsg{} }
 }
 
 // App is the root model. It owns the store, the current application

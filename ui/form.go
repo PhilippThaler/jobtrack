@@ -66,6 +66,8 @@ func (m FormModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyPressMsg:
 		switch msg.String() {
+		case "strg+c":
+			return m, tea.Quit
 		case "esc":
 			return m, backCmd()
 		case "ctrl+s":
