@@ -24,10 +24,29 @@ func New(path string) (*Store, error) {
 			id INTEGER PRIMARY KEY AUTOINCREMENT,
 			company TEXT NOT NULL,
 			role TEXT NOT NULL,
+		  url TEXT,
 			status TEXT NOT NULL,
+		  notes TEXT,
+		  is_favorite INTEGER DEFAULT 0,
 			created_at TEXT DEFAULT (datetime('now')),
 			updated_at TEXT DEFAULT (datetime('now'))
-		);`
+		);
+		CREATE TABLE IF NOT EXISTS contacts (
+		  id INTEGER PRIMARY KEY AUTOINCREMENT,
+		  application_id INTEGER REFERENCES applications(id) ON DELETE CASCADE,
+		  name TEXT NOT NULL,
+		  email TEXT,
+		  phone TEXT,
+		  role TEXT
+		);
+		CREATE TABLE IF NOT EXISTS timeline (
+		  id INTEGER PRIMARY KEY AUTOINCREMENT,
+		  application_id INTEGER REFERENCES applications(id) ON DELETE CASCADE,
+		  event TEXT NOT NULL,
+		  note TEXT,
+		  happened_at TEXT DEFAULT (datetime('now'))
+		);
+		`
 
 	if _, err := db.Exec(schema); err != nil {
 		return nil, err
@@ -43,7 +62,7 @@ func (s *Store) Close() error {
 }
 
 func (s *Store) ListApplications() ([]models.Application, error) {
-	rows, err := s.db.Query(`SELECT id, company, role, status FROM applications`)
+	rows, err := s.db.Query(`SELECT id, company, role, status, COALESCE(url, ''), COALESCE(notes, ''), is_favorite, created_at, updated_at FROM applications`)
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +71,7 @@ func (s *Store) ListApplications() ([]models.Application, error) {
 	var apps []models.Application
 	for rows.Next() {
 		var a models.Application
-		if err := rows.Scan(&a.ID, &a.Company, &a.Role, &a.Status); err != nil {
+		if err := rows.Scan(&a.ID, &a.Company, &a.Role, &a.Status, &a.URL, &a.Notes, &a.IsFavorite, &a.CreatedAt, &a.UpdatedAt); err != nil {
 			return nil, err
 		}
 		apps = append(apps, a)
@@ -62,7 +81,7 @@ func (s *Store) ListApplications() ([]models.Application, error) {
 
 func (s *Store) GetApplication(id int64) (models.Application, error) {
 	var a models.Application
-	err := s.db.QueryRow(`SELECT id, company, role, status FROM applications WHERE id = ?`, id).Scan(&a.ID, &a.Company, &a.Role, &a.Status)
+	err := s.db.QueryRow(`SELECT id, company, role, status, COALESCE(url, ''), COALESCE(notes, ''), is_favorite, created_at, updated_at FROM applications WHERE id = ?`, id).Scan(&a.ID, &a.Company, &a.Role, &a.Status, &a.URL, &a.Notes, &a.IsFavorite, &a.CreatedAt, &a.UpdatedAt)
 
 	if err == sql.ErrNoRows {
 		return a, fmt.Errorf("application %d not found", id)
@@ -72,8 +91,8 @@ func (s *Store) GetApplication(id int64) (models.Application, error) {
 
 func (s *Store) CreateApplication(a *models.Application) error {
 	res, err := s.db.Exec(
-		`INSERT INTO applications (company, role, status) VALUES (?, ?, ?)`,
-		a.Company, a.Role, a.Status,
+		`INSERT INTO applications (company, role, status, url, notes, is_favorite) VALUES (?, ?, ?, ?, ?, ?)`,
+		a.Company, a.Role, a.Status, a.URL, a.Notes, a.IsFavorite,
 	)
 	if err != nil {
 		return err
