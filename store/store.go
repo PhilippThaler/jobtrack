@@ -2,6 +2,7 @@ package store
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"jobtrack/models"
 
@@ -83,7 +84,7 @@ func (s *Store) GetApplication(id int64) (models.Application, error) {
 	var a models.Application
 	err := s.db.QueryRow(`SELECT id, company, role, status, COALESCE(url, ''), COALESCE(notes, ''), is_favorite, created_at, updated_at FROM applications WHERE id = ?`, id).Scan(&a.ID, &a.Company, &a.Role, &a.Status, &a.URL, &a.Notes, &a.IsFavorite, &a.CreatedAt, &a.UpdatedAt)
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return a, fmt.Errorf("application %d not found", id)
 	}
 	return a, err
@@ -102,6 +103,25 @@ func (s *Store) CreateApplication(a *models.Application) error {
 		return err
 	}
 	a.ID = id
+	return nil
+}
+
+func (s *Store) UpdateApplication(a *models.Application) error {
+	_, err := s.db.Exec(
+		`UPDATE applications
+		SET company = ?,
+		    role = ?,
+		    status = ?,
+		    url = ?,
+		    notes = ?,
+		    is_favorite = ?,
+		    updated_at = datetime('now')
+		WHERE id = ?;`,
+		a.Company, a.Role, a.Status, a.URL, a.Notes, a.IsFavorite, a.ID,
+	)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

@@ -41,6 +41,14 @@ func (m ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "a":
 			return m, openFormCmd()
+		case "d":
+			if len(m.applications) > 0 {
+				return m, deleteAppCmd(m.applications[m.cursor])
+			}
+		case "e":
+			if len(m.applications) > 0 {
+				return m, openEditFormCmd(m.applications[m.cursor])
+			}
 		}
 	}
 	return m, nil
@@ -56,6 +64,8 @@ func (m ListModel) View() tea.View {
 		}
 		s += fmt.Sprintf("%s %-20s %-25s %s\n", cursor, app.Company, app.Role, app.Status)
 	}
-	s += "\nenter: details    a: add    j/k: move    q: quit\n"
+	s += "\nenter: details        j/k: move    q: quit\n"
+	s += "a: add    e: edit    d: delete\n"
+
 	return tea.NewView(s)
 }

@@ -4,6 +4,7 @@
 package ui
 
 import (
+	"fmt"
 	"jobtrack/models"
 	"jobtrack/store"
 
@@ -17,6 +18,10 @@ type showListMsg struct{}
 // openFormMsg: the list view, user pressed 'a'.
 type openFormMsg struct{}
 
+type openEditFormMsg struct {
+	app models.Application
+}
+
 type openAppDetailsMsg struct {
 	app models.Application
 }
@@ -25,6 +30,10 @@ type backMsg struct{}
 
 // submitFormMsg: the form view, user pressed ctrl+s with valid input.
 type submitFormMsg struct {
+	app models.Application
+}
+
+type submitEditFormMsg struct {
 	app models.Application
 }
 
@@ -44,6 +53,10 @@ func openFormCmd() tea.Cmd {
 	return func() tea.Msg { return openFormMsg{} }
 }
 
+func openEditFormCmd(app models.Application) tea.Cmd {
+	return func() tea.Msg { return openEditFormMsg{app: app} }
+}
+
 func openAppDetailsCmd(app models.Application) tea.Cmd {
 	return func() tea.Msg { return openAppDetailsMsg{app: app} }
 }
@@ -54,6 +67,10 @@ func backCmd() tea.Cmd {
 
 func submitCmd(app models.Application) tea.Cmd {
 	return func() tea.Msg { return submitFormMsg{app: app} }
+}
+
+func submitEditFormCmd(app models.Application) tea.Cmd {
+	return func() tea.Msg { return submitEditFormMsg{app: app} }
 }
 
 func deleteAppCmd(app models.Application) tea.Cmd {
@@ -95,9 +112,24 @@ func (m App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case openFormMsg:
 		m.view = NewForm()
 		return m, nil
+	case openEditFormMsg:
+		m.view = NewEditForm(msg.app)
+		return m, nil
 	case submitFormMsg:
-		if err := m.store.CreateApplication(&msg.app); err != nil {
-			// TODO: surface this to the user instead of ignoring it.
+		if msg.app.ID == 0 {
+			if err := m.store.CreateApplication(&msg.app); err != nil {
+				// TODO: surface this to the user instead of ignoring it.
+				fmt.Printf("error: %v\n", err)
+			}
+			return m, showListCmd()
+		} else {
+			if err := m.store.UpdateApplication(&msg.app); err != nil {
+				fmt.Printf("error: %v\n", err)
+			}
+			return m, showListCmd()
+		}
+	case submitEditFormMsg:
+		if err := m.store.UpdateApplication(&msg.app); err != nil {
 			return m, nil
 		}
 		return m, showListCmd()

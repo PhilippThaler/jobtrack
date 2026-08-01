@@ -27,10 +27,20 @@ type FormModel struct {
 	inputs    []textinput.Model
 	focus     int // which field is active, 0..fieldStatus
 	statusIdx int // index into models.AllStatuses
+	id        int64
+	title     string
 	errMsg    string
 }
 
 func NewForm() FormModel {
+	return newForm(nil)
+}
+
+func NewEditForm(app models.Application) FormModel {
+	return newForm(&app)
+}
+
+func newForm(app *models.Application) FormModel {
 	company := textinput.New()
 	company.Placeholder = "Acme Corp"
 	company.Focus()
@@ -44,15 +54,34 @@ func NewForm() FormModel {
 	notes := textinput.New()
 	notes.Placeholder = "Anything worth remembering"
 
-	return FormModel{
-		inputs: []textinput.Model{company, role, url, notes},
+	f := FormModel{title: "Add Application"}
+	if app != nil {
+		company.SetValue(app.Company)
+		role.SetValue(app.Role)
+		url.SetValue(app.URL)
+		notes.SetValue(app.Notes)
+		f.id = app.ID
+		f.statusIdx = statusIndex(app.Status)
+		f.title = "Edit Application"
 	}
+	f.inputs = []textinput.Model{company, role, url, notes}
+
+	return f
+}
+
+func statusIndex(status string) int {
+	for i, s := range models.AllStatuses {
+		if s == status {
+			return i
+		}
+	}
+	return 0
 }
 
 func (m FormModel) Init() tea.Cmd { return nil }
 
 // focusField moves the visual cursor to m.focus.
-func (m *FormModel) focusField() {
+func (m FormModel) focusField() {
 	for i := range m.inputs {
 		if i == m.focus {
 			m.inputs[i].Focus()
@@ -66,11 +95,11 @@ func (m FormModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyPressMsg:
 		switch msg.String() {
-		case "strg+c":
+		case "ctrl+c":
 			return m, tea.Quit
 		case "esc":
 			return m, backCmd()
-		case "ctrl+s":
+		case "ctrl+s", "alt+s":
 			return m.submit()
 		case "tab":
 			m.focus = (m.focus + 1) % fieldCount
@@ -112,6 +141,7 @@ func (m FormModel) submit() (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	return m, submitCmd(models.Application{
+		ID:      m.id,
 		Company: company,
 		Role:    role,
 		URL:     m.inputs[fieldURL].Value(),
@@ -121,7 +151,7 @@ func (m FormModel) submit() (tea.Model, tea.Cmd) {
 }
 
 func (m FormModel) View() tea.View {
-	s := "New Application   (esc: cancel, ctrl+s: save)\n"
+	s := fmt.Sprintf("%s    (esc: cancel, ctrl+s: save)\n", m.title)
 	s += "----------------------------------------\n\n"
 
 	labels := []string{"Company:", "Role:", "URL:", "Notes:", "Status:"}
