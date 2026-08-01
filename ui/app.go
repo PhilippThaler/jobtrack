@@ -33,10 +33,6 @@ type submitFormMsg struct {
 	app models.Application
 }
 
-type submitEditFormMsg struct {
-	app models.Application
-}
-
 type deleteAppMsg struct {
 	app models.Application
 }
@@ -67,10 +63,6 @@ func backCmd() tea.Cmd {
 
 func submitCmd(app models.Application) tea.Cmd {
 	return func() tea.Msg { return submitFormMsg{app: app} }
-}
-
-func submitEditFormCmd(app models.Application) tea.Cmd {
-	return func() tea.Msg { return submitEditFormMsg{app: app} }
 }
 
 func deleteAppCmd(app models.Application) tea.Cmd {
@@ -128,11 +120,6 @@ func (m App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			return m, showListCmd()
 		}
-	case submitEditFormMsg:
-		if err := m.store.UpdateApplication(&msg.app); err != nil {
-			return m, nil
-		}
-		return m, showListCmd()
 	case backMsg:
 		m.view = NewList(m.apps)
 		return m, nil

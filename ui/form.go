@@ -20,9 +20,6 @@ const (
 	fieldCount // always last, gives the total number of fields
 )
 
-// FormModel collects the input for a new application.
-// It knows nothing about the database: on save it hands the data
-// to the App via submitFormMsg, and the App does the persisting.
 type FormModel struct {
 	inputs    []textinput.Model
 	focus     int // which field is active, 0..fieldStatus
@@ -99,7 +96,7 @@ func (m FormModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		case "esc":
 			return m, backCmd()
-		case "ctrl+s", "alt+s":
+		case "ctrl+s":
 			return m.submit()
 		case "tab":
 			m.focus = (m.focus + 1) % fieldCount
