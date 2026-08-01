@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"jobtrack/models"
+	"os"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -67,7 +68,13 @@ func (s *Store) ListApplications() ([]models.Application, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+			fmt.Printf("error: %v\n", err)
+			os.Exit(1)
+		}
+	}(rows)
 
 	var apps []models.Application
 	for rows.Next() {

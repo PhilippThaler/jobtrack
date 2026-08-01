@@ -25,6 +25,8 @@ func (m ApplicationDetailModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "esc":
 			return m, backCmd()
+		case "e":
+			return m, openEditFormCmd(m.application)
 		case "d":
 			return m, deleteAppCmd(m.application)
 		case "ctrl+c", "q":
@@ -43,6 +45,6 @@ func (m ApplicationDetailModel) View() tea.View {
 	s += fmt.Sprintf("\tNotes:   %s\n", m.application.Notes)
 	s += fmt.Sprintf("\tStatus:  %s\n", m.application.Status)
 	s += "----------------------------------------\n\n"
-	s += "esc: back    d: delete    q: quit"
+	s += "esc: back    e: edit    d: delete    q: quit"
 	return tea.NewView(s)
 }
