@@ -39,11 +39,15 @@ func (m ApplicationDetailModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m ApplicationDetailModel) View() tea.View {
 	s := "Details\n"
 	s += "----------------------------------------\n"
-	s += fmt.Sprintf("\tCompany: %s\n", m.application.Company)
-	s += fmt.Sprintf("\tRole:    %s\n", m.application.Role)
-	s += fmt.Sprintf("\tURL:     %s\n", m.application.URL)
-	s += fmt.Sprintf("\tNotes:   %s\n", m.application.Notes)
-	s += fmt.Sprintf("\tStatus:  %s\n", m.application.Status)
+	s += fmt.Sprintf("    Created at: %s\n", m.application.CreatedAt)
+	s += fmt.Sprintf("    Updated at: %s\n", m.application.UpdatedAt)
+	s += "----------------------------------------\n"
+	s += fmt.Sprintf("    Company: %s\n", m.application.Company)
+	s += fmt.Sprintf("    Role:    %s\n", m.application.Role)
+	s += fmt.Sprintf("    URL:     %s\n", m.application.URL)
+	s += fmt.Sprintf("    Notes:   %s\n", m.application.Notes)
+	s += fmt.Sprintf("    Status:  %s\n", m.application.Status)
+	s += fmt.Sprintf("    Favorite: %t\n", m.application.IsFavorite)
 	s += "----------------------------------------\n\n"
 	s += "esc: back    e: edit    d: delete    q: quit"
 	return tea.NewView(s)

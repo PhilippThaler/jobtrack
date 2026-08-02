@@ -17,6 +17,7 @@ const (
 	fieldURL
 	fieldNotes
 	fieldStatus
+	fieldFavorite
 	fieldCount // always last, gives the total number of fields
 )
 
@@ -26,6 +27,7 @@ type FormModel struct {
 	statusIdx int // index into models.AllStatuses
 	id        int64
 	title     string
+	favorite  bool
 	errMsg    string
 }
 
@@ -60,6 +62,7 @@ func newForm(app *models.Application) FormModel {
 		f.id = app.ID
 		f.statusIdx = statusIndex(app.Status)
 		f.title = "Edit Application"
+		f.favorite = app.IsFavorite
 	}
 	f.inputs = []textinput.Model{company, role, url, notes}
 
@@ -111,10 +114,16 @@ func (m FormModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if m.focus == fieldStatus {
 				m.statusIdx = (m.statusIdx + 1) % len(models.AllStatuses)
 				return m, nil
+			} else if m.focus == fieldFavorite {
+				m.favorite = !m.favorite
+				return m, nil
 			}
 		case "left":
 			if m.focus == fieldStatus {
 				m.statusIdx = (m.statusIdx + len(models.AllStatuses) - 1) % len(models.AllStatuses)
+				return m, nil
+			} else if m.focus == fieldFavorite {
+				m.favorite = !m.favorite
 				return m, nil
 			}
 		}
@@ -138,12 +147,13 @@ func (m FormModel) submit() (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 	return m, submitCmd(models.Application{
-		ID:      m.id,
-		Company: company,
-		Role:    role,
-		URL:     m.inputs[fieldURL].Value(),
-		Status:  models.AllStatuses[m.statusIdx],
-		Notes:   m.inputs[fieldNotes].Value(),
+		ID:         m.id,
+		Company:    company,
+		Role:       role,
+		URL:        m.inputs[fieldURL].Value(),
+		Status:     models.AllStatuses[m.statusIdx],
+		Notes:      m.inputs[fieldNotes].Value(),
+		IsFavorite: m.favorite,
 	})
 }
 
@@ -151,7 +161,7 @@ func (m FormModel) View() tea.View {
 	s := fmt.Sprintf("%s    (esc: cancel, ctrl+s: save)\n", m.title)
 	s += "----------------------------------------\n\n"
 
-	labels := []string{"Company:", "Role:", "URL:", "Notes:", "Status:"}
+	labels := []string{"Company:", "Role:", "URL:", "Notes:", "Status:", "Favorite:"}
 	for i, label := range labels {
 		marker := " "
 		if m.focus == i {
@@ -159,6 +169,12 @@ func (m FormModel) View() tea.View {
 		}
 		if i == fieldStatus {
 			s += fmt.Sprintf("%s %-9s %s   (left/right to change)\n", marker, label, models.AllStatuses[m.statusIdx])
+		} else if i == fieldFavorite {
+			box := "[ ]"
+			if m.favorite {
+				box = "[x]"
+			}
+			s += fmt.Sprintf("%s %-9s %s    (space to toggle)\n", marker, label, box)
 		} else {
 			s += fmt.Sprintf("%s %-9s %s\n", marker, label, m.inputs[i].View())
 		}

@@ -41,6 +41,10 @@ type submitDeleteApplicationMsg struct {
 	app models.Application
 }
 
+type toggleFavoriteMsg struct {
+	app models.Application
+}
+
 func showListCmd() tea.Cmd {
 	return func() tea.Msg { return showListMsg{} }
 }
@@ -71,6 +75,10 @@ func deleteAppCmd(app models.Application) tea.Cmd {
 
 func submitDeleteApplicationCmd(app models.Application) tea.Cmd {
 	return func() tea.Msg { return submitDeleteApplicationMsg{app: app} }
+}
+
+func toggleFavoriteCmd(app models.Application) tea.Cmd {
+	return func() tea.Msg { return toggleFavoriteMsg{app: app} }
 }
 
 // App is the root model. It owns the store, the current application
@@ -131,6 +139,11 @@ func (m App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 	case submitDeleteApplicationMsg:
 		if err := m.store.DeleteApplication(msg.app.ID); err != nil {
+			return m, nil
+		}
+		return m, showListCmd()
+	case toggleFavoriteMsg:
+		if err := m.store.ToggleFavorite(msg.app.ID); err != nil {
 			return m, nil
 		}
 		return m, showListCmd()

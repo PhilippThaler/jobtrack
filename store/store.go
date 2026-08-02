@@ -126,13 +126,15 @@ func (s *Store) UpdateApplication(a *models.Application) error {
 		WHERE id = ?;`,
 		a.Company, a.Role, a.Status, a.URL, a.Notes, a.IsFavorite, a.ID,
 	)
-	if err != nil {
-		return err
-	}
-	return nil
+	return err
 }
 
 func (s *Store) DeleteApplication(id int64) error {
 	_, err := s.db.Exec(`DELETE FROM applications WHERE id = ?`, id)
+	return err
+}
+
+func (s *Store) ToggleFavorite(id int64) error {
+	_, err := s.db.Exec(`UPDATE applications SET is_favorite = NOT is_favorite WHERE id = ?`, id)
 	return err
 }

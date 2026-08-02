@@ -49,6 +49,10 @@ func (m ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			if len(m.applications) > 0 {
 				return m, openEditFormCmd(m.applications[m.cursor])
 			}
+		case "f":
+			if len(m.applications) > 0 {
+				return m, toggleFavoriteCmd(m.applications[m.cursor])
+			}
 		}
 	}
 	return m, nil
@@ -58,14 +62,20 @@ func (m ListModel) View() tea.View {
 	s := "JobTrack\n"
 	s += "----------------------------------------\n"
 	for i, app := range m.applications {
+		var favoriteSign string
+		if app.IsFavorite {
+			favoriteSign = "*"
+		} else {
+			favoriteSign = " "
+		}
 		cursor := " "
 		if m.cursor == i {
 			cursor = ">"
 		}
-		s += fmt.Sprintf("%s %-20s %-25s %s\n", cursor, app.Company, app.Role, app.Status)
+		s += fmt.Sprintf("%s %-20s %-25s %s %s\n", cursor, app.Company, app.Role, app.Status, favoriteSign)
 	}
-	s += "\nenter: details        j/k: move    q: quit\n"
-	s += "a: add    e: edit    d: delete\n"
+	s += "\nenter: details        j/k: move    q: quit"
+	s += "\na: add    e: edit    d: delete    f: favorite\n"
 
 	return tea.NewView(s)
 }
