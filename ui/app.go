@@ -156,5 +156,5 @@ func (m App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m App) View() tea.View {
-	return m.view.View()
+	return tea.NewView(appBox.Render(m.view.View().Content))
 }
