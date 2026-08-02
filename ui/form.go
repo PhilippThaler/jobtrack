@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"strings"
 
 	"jobtrack/models"
 
@@ -158,8 +159,9 @@ func (m FormModel) submit() (tea.Model, tea.Cmd) {
 }
 
 func (m FormModel) View() tea.View {
-	s := fmt.Sprintf("%s    (esc: cancel, ctrl+s: save)\n", m.title)
-	s += "----------------------------------------\n\n"
+	var s strings.Builder
+	s.WriteString(fmt.Sprintf("%s    (esc: cancel, ctrl+s: save)\n", m.title))
+	s.WriteString("----------------------------------------\n\n")
 
 	labels := []string{"Company:", "Role:", "URL:", "Notes:", "Status:", "Favorite:"}
 	for i, label := range labels {
@@ -168,20 +170,20 @@ func (m FormModel) View() tea.View {
 			marker = ">"
 		}
 		if i == fieldStatus {
-			s += fmt.Sprintf("%s %-9s %s   (left/right to change)\n", marker, label, models.AllStatuses[m.statusIdx])
+			s.WriteString(fmt.Sprintf("%s %-9s %s   (left/right to change)\n", marker, label, models.AllStatuses[m.statusIdx]))
 		} else if i == fieldFavorite {
 			box := "[ ]"
 			if m.favorite {
 				box = "[x]"
 			}
-			s += fmt.Sprintf("%s %-9s %s    (space to toggle)\n", marker, label, box)
+			s.WriteString(fmt.Sprintf("%s %-9s %s    (space to toggle)\n", marker, label, box))
 		} else {
-			s += fmt.Sprintf("%s %-9s %s\n", marker, label, m.inputs[i].View())
+			s.WriteString(fmt.Sprintf("%s %-9s %s\n", marker, label, m.inputs[i].View()))
 		}
 	}
 
 	if m.errMsg != "" {
-		s += "\n" + m.errMsg + "\n"
+		s.WriteString("\n" + m.errMsg + "\n")
 	}
-	return tea.NewView(s)
+	return tea.NewView(s.String())
 }

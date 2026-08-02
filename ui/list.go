@@ -2,6 +2,7 @@ package ui
 
 import (
 	"fmt"
+	"strings"
 
 	"jobtrack/models"
 
@@ -59,8 +60,9 @@ func (m ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m ListModel) View() tea.View {
-	s := "JobTrack\n"
-	s += "----------------------------------------\n"
+	var s strings.Builder
+	s.WriteString("JobTrack\n")
+	s.WriteString("----------------------------------------\n")
 	for i, app := range m.applications {
 		var favoriteSign string
 		if app.IsFavorite {
@@ -72,10 +74,10 @@ func (m ListModel) View() tea.View {
 		if m.cursor == i {
 			cursor = ">"
 		}
-		s += fmt.Sprintf("%s %-20s %-25s %s %s\n", cursor, app.Company, app.Role, app.Status, favoriteSign)
+		s.WriteString(fmt.Sprintf("%s %-20s %-25s %s %s\n", cursor, app.Company, app.Role, app.Status, favoriteSign))
 	}
-	s += "\nenter: details        j/k: move    q: quit"
-	s += "\na: add    e: edit    d: delete    f: favorite\n"
+	s.WriteString("\nenter: details        j/k: move    q: quit")
+	s.WriteString("\na: add    e: edit    d: delete    f: favorite\n")
 
-	return tea.NewView(s)
+	return tea.NewView(s.String())
 }
