@@ -84,16 +84,18 @@ func toggleFavoriteCmd(app models.Application) tea.Cmd {
 // App is the root model. It owns the store, the current application
 // data, and whichever view is active.
 type App struct {
-	store *store.Store
-	apps  []models.Application
-	view  tea.Model
+	store  *store.Store
+	apps   []models.Application
+	view   tea.Model
+	width  int
+	height int
 }
 
 func NewApp(s *store.Store, apps []models.Application) App {
 	return App{
 		store: s,
 		apps:  apps,
-		view:  NewList(apps),
+		view:  NewList(apps, 0, 0),
 	}
 }
 
@@ -101,13 +103,19 @@ func (m App) Init() tea.Cmd { return nil }
 
 func (m App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.width = msg.Width - appBox.GetHorizontalFrameSize()
+		m.height = msg.Height - appBox.GetVerticalFrameSize()
+		view, cmd := m.view.Update(msg)
+		m.view = view
+		return m, cmd
 	case showListMsg:
 		apps, err := m.store.ListApplications()
 		if err != nil {
 			return m, nil
 		}
 		m.apps = apps
-		m.view = NewList(apps)
+		m.view = NewList(apps, m.width, m.height)
 		return m, nil
 	case openFormMsg:
 		m.view = NewForm()
@@ -129,7 +137,7 @@ func (m App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, showListCmd()
 		}
 	case backMsg:
-		m.view = NewList(m.apps)
+		m.view = NewList(m.apps, m.width, m.height)
 		return m, nil
 	case openAppDetailsMsg:
 		m.view = NewApplicationDetail(msg.app)
@@ -156,5 +164,7 @@ func (m App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m App) View() tea.View {
-	return tea.NewView(appBox.Render(m.view.View().Content))
+	v := tea.NewView(appBox.Render(m.view.View().Content))
+	v.AltScreen = true
+	return v
 }

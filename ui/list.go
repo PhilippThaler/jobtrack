@@ -2,82 +2,82 @@ package ui
 
 import (
 	"fmt"
-	"strings"
-
 	"jobtrack/models"
 
+	"charm.land/bubbles/v2/list"
 	tea "charm.land/bubbletea/v2"
 )
 
 // ListModel shows all applications as a table.
 // On 'a' it tells the App to open the form via openFormMsg.
 type ListModel struct {
-	applications []models.Application
-	cursor       int
+	list list.Model
 }
 
-func NewList(apps []models.Application) ListModel {
-	return ListModel{applications: apps}
+type appItem struct {
+	application models.Application
+}
+
+func (i appItem) Title() string {
+	star := "  "
+	if i.application.IsFavorite {
+		star = "⭐"
+	}
+	return fmt.Sprintf("%s  %s", star, i.application.Company)
+}
+func (i appItem) Description() string {
+	return fmt.Sprintf("%s - %s", i.application.Role, i.application.Status)
+}
+
+func (i appItem) FilterValue() string {
+	return fmt.Sprintf("%s %s %s", i.application.Company, i.application.Role, i.application.Status)
+}
+
+func toItems(applications []models.Application) []list.Item {
+	items := make([]list.Item, len(applications))
+	for i, app := range applications {
+		items[i] = appItem{application: app}
+	}
+	return items
+}
+
+func NewList(apps []models.Application, width, height int) ListModel {
+	l := list.New(toItems(apps), list.NewDefaultDelegate(), width, height)
+	return ListModel{list: l}
 }
 
 func (m ListModel) Init() tea.Cmd { return nil }
 
 func (m ListModel) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
+	case tea.WindowSizeMsg:
+		m.list.SetSize(msg.Width-appBox.GetHorizontalFrameSize(), msg.Height-appBox.GetVerticalFrameSize())
+		return m, nil
 	case tea.KeyPressMsg:
 		switch msg.String() {
-		case "ctrl+c", "q":
-			return m, tea.Quit
-		case "up", "k":
-			if m.cursor > 0 {
-				m.cursor--
-			}
-		case "down", "j":
-			if m.cursor < len(m.applications)-1 {
-				m.cursor++
-			}
-		case "enter":
-			if len(m.applications) > 0 {
-				return m, openAppDetailsCmd(m.applications[m.cursor])
-			}
 		case "a":
 			return m, openFormCmd()
 		case "d":
-			if len(m.applications) > 0 {
-				return m, deleteAppCmd(m.applications[m.cursor])
-			}
+			app := m.list.SelectedItem().(appItem).application
+			return m, deleteAppCmd(app)
 		case "e":
-			if len(m.applications) > 0 {
-				return m, openEditFormCmd(m.applications[m.cursor])
-			}
+			app := m.list.SelectedItem().(appItem).application
+			return m, openEditFormCmd(app)
 		case "f":
-			if len(m.applications) > 0 {
-				return m, toggleFavoriteCmd(m.applications[m.cursor])
-			}
+			app := m.list.SelectedItem().(appItem).application
+			return m, toggleFavoriteCmd(app)
+		case "enter":
+			app := m.list.SelectedItem().(appItem).application
+			return m, openAppDetailsCmd(app)
+		case "ctrl+c", "q":
+			return m, tea.Quit
 		}
 	}
-	return m, nil
+	var cmd tea.Cmd
+	m.list, cmd = m.list.Update(msg)
+	return m, cmd
 }
 
 func (m ListModel) View() tea.View {
-	var s strings.Builder
-	s.WriteString("JobTrack\n")
-	s.WriteString("----------------------------------------\n")
-	for i, app := range m.applications {
-		var favoriteSign string
-		if app.IsFavorite {
-			favoriteSign = "*"
-		} else {
-			favoriteSign = " "
-		}
-		cursor := " "
-		if m.cursor == i {
-			cursor = ">"
-		}
-		s.WriteString(fmt.Sprintf("%s %-20s %-25s %s %s\n", cursor, app.Company, app.Role, app.Status, favoriteSign))
-	}
-	s.WriteString("\nenter: details        j/k: move    q: quit")
-	s.WriteString("\na: add    e: edit    d: delete    f: favorite\n")
-
-	return tea.NewView(s.String())
+	return tea.NewView(m.list.View())
 }
